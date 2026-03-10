@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-logger.py — fetches current occupancy from SafeSpace and appends to data/occupancy.csv
+logger.py — fetches current occupancy from SafeSpace and appends to docs/data/occupancy.csv
 Only runs during gym hours (ET):
   Weekdays : 5:00 AM – 10:00 PM
   Weekends : 10:00 AM –  5:00 PM
@@ -25,7 +25,7 @@ SPACE_ID      = "86fb9e11"
 FULL_SPACE_ID = "86fb9e11-6795-4e98-ac36-67262d509fc6"
 BASE_HTTP     = "https://app.safespace.io/veart/socket.io/"
 BASE_WS       = "wss://app.safespace.io/veart/socket.io/"
-CSV_PATH      = Path("data/occupancy.csv")
+CSV_PATH      = Path("docs/data/occupancy.csv")   # inside docs/ so GitHub Pages can serve it
 TIMEZONE      = pytz.timezone("America/New_York")
 
 HEADERS = {
