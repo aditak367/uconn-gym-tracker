@@ -3,435 +3,378 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UConn Rec Gym · Occupancy</title>
+<title>UConn Rec Center · Occupancy</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:      #0a0c10;
-    --surface: #111318;
-    --border:  #1e2330;
-    --accent:  #00e5a0;
-    --accent2: #0099ff;
-    --text:    #e8eaf0;
-    --muted:   #5a6070;
-    --red:     #ff4d6d;
-    --yellow:  #ffd166;
+    --bg:         #0f1117;
+    --bg2:        #161b25;
+    --surface:    #1c2232;
+    --surface2:   #212840;
+    --border:     #2a3350;
+    --border2:    #344060;
+    --accent:     #3b82f6;
+    --green:      #10b981;
+    --yellow:     #f59e0b;
+    --red:        #ef4444;
+    --text:       #f0f4ff;
+    --text2:      #94a3b8;
+    --text3:      #64748b;
+    --mono:       'JetBrains Mono', monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    padding: 2rem;
+    line-height: 1.5;
   }
-  header {
-    display: flex;
-    align-items: baseline;
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
+  .page { max-width: 1280px; margin: 0 auto; padding: 2rem 2.5rem 4rem; }
+
+  /* Top bar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 1.75rem; margin-bottom: 2rem;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 1.5rem;
   }
-  header h1 {
-    font-size: clamp(1.4rem, 3vw, 2rem);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    color: var(--accent);
+  .topbar-left { display: flex; align-items: center; gap: 1rem; }
+  .logo {
+    width: 40px; height: 40px; background: var(--accent);
+    border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 1.2rem; flex-shrink: 0;
   }
-  header span {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--muted);
+  .topbar-title { font-size: 1.1rem; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+  .topbar-sub   { font-size: 0.75rem; color: var(--text3); margin-top: 1px; }
+  .live-badge {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 0.35rem 0.85rem;
+    font-size: 0.72rem; font-weight: 500; color: var(--text2);
+    font-family: var(--mono);
   }
+  .live-dot {
+    width: 7px; height: 7px; background: var(--green);
+    border-radius: 50%; box-shadow: 0 0 6px var(--green);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* Stat cards */
   .stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.25rem;
-    margin-bottom: 2rem;
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: 1rem; margin-bottom: 1.5rem;
   }
+  @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:500px){.stats{grid-template-columns:1fr}}
   .stat {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.75rem 2rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem 1.75rem;
+    position: relative; overflow: hidden; transition: border-color 0.2s;
+  }
+  .stat:hover { border-color: var(--border2); }
+  .stat-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; border-radius: 12px 12px 0 0;
   }
   .stat-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    margin-bottom: 0.75rem;
+    font-size: 0.72rem; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--text3); margin-bottom: 0.6rem;
   }
   .stat-value {
-    font-size: 2.6rem;
-    font-weight: 800;
-    letter-spacing: -0.04em;
-    line-height: 1;
+    font-size: 2.25rem; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1; color: var(--text);
   }
-  .stat-value.green  { color: var(--accent); }
-  .stat-value.blue   { color: var(--accent2); }
+  .stat-sub { font-size: 0.72rem; color: var(--text3); margin-top: 0.45rem; font-family: var(--mono); }
+  .stat-value.green  { color: var(--green); }
+  .stat-value.blue   { color: var(--accent); }
   .stat-value.yellow { color: var(--yellow); }
   .stat-value.red    { color: var(--red); }
-  .controls {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
-    align-items: center;
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 1.25rem; overflow: hidden; }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border);
   }
-  .controls label {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+  .card-title { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+  .card-body  { padding: 1.5rem; }
+
+  /* Day filter */
+  .day-filters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
   .day-btn {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 0.4rem 0.9rem;
-    border-radius: 4px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    cursor: pointer;
-    transition: all 0.15s;
+    background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text3); padding: 0.3rem 0.75rem; border-radius: 6px;
+    font-family: var(--mono); font-size: 0.7rem; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
   }
-  .day-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
-  .day-btn:hover:not(.active) { border-color: var(--accent); color: var(--text); }
-  .chart-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    height: 380px;
-  }
-  .section-title {
-    font-size: 0.8rem;
-    font-family: 'Space Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    margin-bottom: 1rem;
-  }
-  .heatmap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.5rem;
-    overflow-x: auto;
-    margin-bottom: 1.5rem;
-  }
-  table { border-collapse: collapse; width: 100%; min-width: 600px; }
-  th {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 0.3rem 0.5rem;
-    text-align: center;
-  }
-  td {
-    width: 3.5%; height: 28px;
-    border-radius: 3px;
-    font-size: 0.55rem;
-    font-family: 'Space Mono', monospace;
-    text-align: center;
-    vertical-align: middle;
-  }
-  td.day-label {
-    font-size: 0.65rem; color: var(--muted);
-    text-align: right; padding-right: 0.75rem;
-    width: auto; white-space: nowrap;
-  }
-  .loading {
-    text-align: center;
-    padding: 4rem;
-    font-family: 'Space Mono', monospace;
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-  .pulse { animation: pulse 2s ease-in-out infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
-  .live-dot {
-    display: inline-block; width: 8px; height: 8px;
-    background: var(--accent); border-radius: 50%; margin-right: 0.5rem;
-  }
+  .day-btn:hover { border-color: var(--accent); color: var(--text2); }
+  .day-btn.active { background: var(--accent); border-color: var(--accent); color:#fff; font-weight:600; }
+
+  /* Chart */
+  .chart-wrap { height: 360px; position: relative; }
+
+  /* Heatmap */
+  .heatmap-wrap { overflow-x: auto; }
+  table { border-collapse: separate; border-spacing: 2px; width: 100%; min-width: 640px; }
+  th { font-family: var(--mono); font-size: 0.6rem; color: var(--text3); padding: 0.2rem 0.3rem; text-align: center; font-weight: 400; }
+  td { height: 30px; border-radius: 4px; font-size: 0.58rem; font-family: var(--mono); text-align: center; vertical-align: middle; cursor: default; }
+  td:hover { opacity: 0.8; }
+  td.day-label { font-size:0.68rem; font-weight:500; color:var(--text2); text-align:right; padding-right:0.75rem; width:3rem; white-space:nowrap; background:transparent!important; }
+
+  /* Notice */
+  .notice { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:2.5rem; text-align:center; font-size:0.85rem; color:var(--text2); margin-bottom:1.25rem; display:none; }
+  .notice.error { border-color:#3f1a1a; color:var(--red); background:#1a0a0a; display:block; }
+  .notice.info  { display:block; }
+
+  /* Footer */
   footer {
-    margin-top: 2rem;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--muted);
-    border-top: 1px solid var(--border);
-    padding-top: 1rem;
-  }
-  #error-msg {
-    background: #1a0a0a;
-    border: 1px solid var(--red);
-    color: var(--red);
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    margin-bottom: 1.5rem;
-    display: none;
+    margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 0.5rem; font-size: 0.72rem; color: var(--text3); font-family: var(--mono);
   }
 </style>
 </head>
 <body>
+<div class="page">
 
-<header>
-  <h1>⚡ UConn Rec Gym</h1>
-  <span><span class="live-dot pulse"></span>Occupancy Dashboard — updated every 15 min</span>
-</header>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">🏋️</div>
+      <div>
+        <div class="topbar-title">UConn Recreation Center</div>
+        <div class="topbar-sub">Live Occupancy Tracker</div>
+      </div>
+    </div>
+    <div class="live-badge"><span class="live-dot"></span>Updated every 15 min</div>
+  </div>
 
-<div id="error-msg"></div>
+  <div class="notice" id="notice-msg"></div>
 
-<div class="stats">
-  <div class="stat">
-    <div class="stat-label">Latest Reading</div>
-    <div class="stat-value green" id="stat-current">—</div>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-bar" style="background:var(--green)"></div>
+      <div class="stat-label">Current Occupancy</div>
+      <div class="stat-value green" id="stat-current">—</div>
+      <div class="stat-sub">out of 1,000</div>
+    </div>
+    <div class="stat">
+      <div class="stat-bar" style="background:var(--accent)"></div>
+      <div class="stat-label">Capacity</div>
+      <div class="stat-value blue" id="stat-pct">—</div>
+      <div class="stat-sub" id="stat-pct-label">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-bar" style="background:var(--yellow)"></div>
+      <div class="stat-label">Today's Peak</div>
+      <div class="stat-value yellow" id="stat-peak">—</div>
+      <div class="stat-sub" id="stat-peak-time">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-bar" style="background:var(--text3)"></div>
+      <div class="stat-label">Total Readings</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-sub" id="stat-days">—</div>
+    </div>
   </div>
-  <div class="stat">
-    <div class="stat-label">% Capacity</div>
-    <div class="stat-value blue" id="stat-pct">—</div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Occupancy Over Time</span>
+      <div class="day-filters">
+        <button class="day-btn active" data-day="All">All</button>
+        <button class="day-btn" data-day="Monday">Mon</button>
+        <button class="day-btn" data-day="Tuesday">Tue</button>
+        <button class="day-btn" data-day="Wednesday">Wed</button>
+        <button class="day-btn" data-day="Thursday">Thu</button>
+        <button class="day-btn" data-day="Friday">Fri</button>
+        <button class="day-btn" data-day="Saturday">Sat</button>
+        <button class="day-btn" data-day="Sunday">Sun</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+    </div>
   </div>
-  <div class="stat">
-    <div class="stat-label">Today Peak</div>
-    <div class="stat-value yellow" id="stat-peak">—</div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Weekly Heatmap</span>
+      <span style="font-size:0.72rem;color:var(--text3);font-family:var(--mono)">avg occupancy by day &amp; hour</span>
+    </div>
+    <div class="card-body">
+      <div class="heatmap-wrap">
+        <table id="heatmap">
+          <tr><td class="day-label"></td><td colspan="24" style="color:var(--text3);font-size:0.8rem;text-align:center;padding:1rem">Loading...</td></tr>
+        </table>
+      </div>
+    </div>
   </div>
-  <div class="stat">
-    <div class="stat-label">Total Readings</div>
-    <div class="stat-value" id="stat-total">—</div>
-  </div>
+
+  <footer>
+    <span id="footer-left">—</span>
+    <span>UConn Rec Center · github-actions logger</span>
+  </footer>
+
 </div>
-
-<div class="controls">
-  <label>Day:</label>
-  <button class="day-btn active" data-day="All">All</button>
-  <button class="day-btn" data-day="Monday">Mon</button>
-  <button class="day-btn" data-day="Tuesday">Tue</button>
-  <button class="day-btn" data-day="Wednesday">Wed</button>
-  <button class="day-btn" data-day="Thursday">Thu</button>
-  <button class="day-btn" data-day="Friday">Fri</button>
-  <button class="day-btn" data-day="Saturday">Sat</button>
-  <button class="day-btn" data-day="Sunday">Sun</button>
-</div>
-
-<div class="chart-wrap">
-  <canvas id="lineChart"></canvas>
-</div>
-
-<p class="section-title">Weekly Heatmap — avg occupancy by day &amp; hour</p>
-<div class="heatmap"><table id="heatmap"><tr><td class="loading pulse">Loading data...</td></tr></table></div>
-
-<footer id="footer">Loading...</footer>
-
 <script>
-const DAYS    = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-const COLORS  = {
-  Monday:"#00e5a0", Tuesday:"#0099ff", Wednesday:"#ffd166",
-  Thursday:"#ff4d6d", Friday:"#c77dff", Saturday:"#ff9a3c", Sunday:"#4cc9f0"
+const DAYS   = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const COLORS = {
+  Monday:"#3b82f6",Tuesday:"#10b981",Wednesday:"#f59e0b",
+  Thursday:"#ef4444",Friday:"#8b5cf6",Saturday:"#f97316",Sunday:"#06b6d4"
 };
 const MAX_CAP = 1000;
-
-// Path to CSV — works both on GitHub Pages and locally
 const CSV_URL = "data/occupancy.csv";
+let allData=[], chart=null, activeDay="All";
 
-let allData   = [];
-let chart     = null;
-let activeDay = "All";
-
-// ── CSV parser ─────────────────────────────────────────────────────────────
 function parseCSV(text) {
   const lines = text.trim().split("\n");
   if (lines.length < 2) return [];
-  const headers = lines[0].split(",").map(h => h.trim());
+  const headers = lines[0].split(",").map(h=>h.trim());
   return lines.slice(1).map(line => {
-    const vals = line.split(",");
-    const obj  = {};
-    headers.forEach((h, i) => obj[h] = vals[i]?.trim());
-    return {
-      timestamp: obj.timestamp,
-      day:       obj.day,
-      hour:      parseFloat(obj.hour),
-      count:     parseInt(obj.count, 10),
-    };
-  }).filter(r => !isNaN(r.count) && !isNaN(r.hour));
+    const vals=line.split(","), obj={};
+    headers.forEach((h,i)=>obj[h]=vals[i]?.trim());
+    return {timestamp:obj.timestamp,day:obj.day,hour:parseFloat(obj.hour),count:parseInt(obj.count,10)};
+  }).filter(r=>!isNaN(r.count)&&!isNaN(r.hour));
 }
 
-// ── Chart ──────────────────────────────────────────────────────────────────
 function hourLabel(h) {
-  const hh = Math.floor(h), mm = Math.round((h - hh) * 60);
-  const ap = hh >= 12 ? "PM" : "AM";
-  const d  = ((hh - 1 + 12) % 12) + 1;
+  const hh=Math.floor(h),mm=Math.round((h-hh)*60);
+  const ap=hh>=12?"PM":"AM",d=((hh-1+12)%12)+1;
   return `${d}:${mm.toString().padStart(2,"0")} ${ap}`;
 }
 
 function makeDatasets(data) {
   if (activeDay !== "All") {
-    const f = data.filter(d => d.day === activeDay);
-    return [{
-      label: activeDay,
-      data:  f.map(d => ({ x: d.hour, y: d.count })),
-      borderColor:     COLORS[activeDay] || "#00e5a0",
-      backgroundColor: (COLORS[activeDay] || "#00e5a0") + "22",
-      fill: true, tension: 0.4, pointRadius: 4, pointHoverRadius: 6, showLine: true,
-    }];
+    const f=data.filter(d=>d.day===activeDay), color=COLORS[activeDay]||"#3b82f6";
+    return [{label:activeDay,data:f.map(d=>({x:d.hour,y:d.count})),borderColor:color,backgroundColor:color+"18",fill:true,tension:0.4,pointRadius:3,pointHoverRadius:5,borderWidth:2,showLine:true}];
   }
-  return DAYS.map(day => ({
-    label: day,
-    data:  data.filter(d => d.day === day)
-               .map(d => ({ x: d.hour, y: d.count }))
-               .sort((a, b) => a.x - b.x),
-    borderColor:     COLORS[day],
-    backgroundColor: COLORS[day] + "18",
-    fill: false, tension: 0.4, pointRadius: 3, pointHoverRadius: 5, showLine: true,
-  })).filter(ds => ds.data.length > 0);
+  return DAYS.map(day=>({
+    label:day,
+    data:data.filter(d=>d.day===day).map(d=>({x:d.hour,y:d.count})).sort((a,b)=>a.x-b.x),
+    borderColor:COLORS[day],backgroundColor:COLORS[day]+"10",
+    fill:false,tension:0.4,pointRadius:2,pointHoverRadius:4,borderWidth:2,showLine:true,
+  })).filter(ds=>ds.data.length>0);
 }
 
 function initChart(data) {
-  const ctx = document.getElementById("lineChart").getContext("2d");
-  if (chart) chart.destroy();
-  chart = new Chart(ctx, {
-    type: "line",
-    data: { datasets: makeDatasets(data) },
-    options: {
-      animation: { duration: 300 },
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color:"#5a6070", font:{ family:"Space Mono", size:10 }, boxWidth:12 } },
-        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y} people at ${hourLabel(c.parsed.x)}` } }
-      },
-      scales: {
-        x: {
-          type: "linear", min: 0, max: 24,
-          ticks: { color:"#5a6070", font:{ family:"Space Mono", size:9 }, stepSize:2, callback: v => hourLabel(v) },
-          grid: { color: "#1e2330" }
-        },
-        y: {
-          min: 0, max: MAX_CAP,
-          ticks: { color:"#5a6070", font:{ family:"Space Mono", size:9 } },
-          grid: { color: "#1e2330" }
+  const ctx=document.getElementById("lineChart").getContext("2d");
+  if(chart)chart.destroy();
+  chart=new Chart(ctx,{
+    type:"line",
+    data:{datasets:makeDatasets(data)},
+    options:{
+      animation:{duration:250},responsive:true,maintainAspectRatio:false,
+      interaction:{mode:"nearest",intersect:false},
+      plugins:{
+        legend:{labels:{color:"#64748b",font:{family:"'JetBrains Mono',monospace",size:11},boxWidth:10,boxHeight:10,borderRadius:3,padding:16}},
+        tooltip:{
+          backgroundColor:"#1c2232",borderColor:"#2a3350",borderWidth:1,
+          titleColor:"#94a3b8",bodyColor:"#f0f4ff",padding:10,
+          callbacks:{title:i=>hourLabel(i[0].parsed.x),label:c=>`  ${c.dataset.label}: ${c.parsed.y} people`}
         }
+      },
+      scales:{
+        x:{type:"linear",min:0,max:24,
+          ticks:{color:"#475569",font:{family:"'JetBrains Mono',monospace",size:10},stepSize:2,callback:v=>hourLabel(v)},
+          grid:{color:"#1c2232"},border:{color:"#2a3350"}},
+        y:{min:0,max:MAX_CAP,
+          ticks:{color:"#475569",font:{family:"'JetBrains Mono',monospace",size:10}},
+          grid:{color:"#1c2232"},border:{color:"#2a3350"}}
       }
     }
   });
 }
 
-// ── Heatmap ────────────────────────────────────────────────────────────────
 function buildHeatmap(data) {
-  const HOURS = Array.from({ length: 24 }, (_, i) => i);
-  const grid  = {};
-  DAYS.forEach(d => { grid[d] = {}; HOURS.forEach(h => { grid[d][h] = []; }); });
-  data.forEach(r => {
-    const h = Math.floor(r.hour);
-    if (grid[r.day] && grid[r.day][h] !== undefined) grid[r.day][h].push(r.count);
-  });
-  let gmax = 1;
-  DAYS.forEach(d => HOURS.forEach(h => {
-    const a = grid[d][h];
-    if (a.length) gmax = Math.max(gmax, a.reduce((x,y) => x+y, 0) / a.length);
-  }));
+  const HOURS=Array.from({length:24},(_,i)=>i);
+  const grid={};
+  DAYS.forEach(d=>{grid[d]={};HOURS.forEach(h=>{grid[d][h]=[];})});
+  data.forEach(r=>{const h=Math.floor(r.hour);if(grid[r.day]?.[h]!==undefined)grid[r.day][h].push(r.count);});
+  let gmax=1;
+  DAYS.forEach(d=>HOURS.forEach(h=>{const a=grid[d][h];if(a.length)gmax=Math.max(gmax,a.reduce((x,y)=>x+y,0)/a.length);}));
 
-  const table = document.getElementById("heatmap");
-  table.innerHTML = "";
-  const hr = table.insertRow();
-  hr.insertCell(); // corner
-  HOURS.forEach(h => {
-    const th = document.createElement("th");
-    th.textContent = h % 3 === 0 ? (h === 0 ? "12a" : h < 12 ? h+"a" : h === 12 ? "12p" : (h-12)+"p") : "";
-    hr.appendChild(th);
-  });
+  const table=document.getElementById("heatmap");
+  table.innerHTML="";
+  const hr=table.insertRow();
+  hr.insertCell().className="day-label";
+  HOURS.forEach(h=>{const th=document.createElement("th");th.textContent=h%3===0?(h===0?"12a":h<12?h+"a":h===12?"12p":(h-12)+"p"):"";hr.appendChild(th);});
 
-  DAYS.forEach(day => {
-    const row = table.insertRow();
-    const dc  = row.insertCell();
-    dc.className   = "day-label";
-    dc.textContent = day.substring(0, 3);
-    HOURS.forEach(h => {
-      const cell = row.insertCell();
-      const arr  = grid[day][h];
-      if (arr.length) {
-        const avg = arr.reduce((a,b) => a+b, 0) / arr.length;
-        const t   = avg / gmax;
-        let r, g, b;
-        if (t < 0.5) { r=0; g=Math.round(t*2*229); b=Math.round(t*2*160); }
-        else { const u=(t-0.5)*2; r=Math.round(u*255); g=Math.round(229-u*156); b=Math.round(160-u*109); }
-        cell.style.background = `rgb(${r},${g},${b})`;
-        cell.style.color      = t > 0.4 ? "#000" : "#e8eaf0";
-        cell.title            = `${day} ${h}:00 — avg ${Math.round(avg)}`;
-        cell.textContent      = Math.round(avg);
-      } else {
-        cell.style.background = "#111318";
-      }
+  DAYS.forEach(day=>{
+    const row=table.insertRow();
+    const dc=row.insertCell();dc.className="day-label";dc.textContent=day.substring(0,3);
+    HOURS.forEach(h=>{
+      const cell=row.insertCell(),arr=grid[day][h];
+      if(arr.length){
+        const avg=arr.reduce((a,b)=>a+b,0)/arr.length,t=avg/gmax;
+        let r,g,b;
+        if(t<0.5){r=Math.round(17+t*2*(16-17));g=Math.round(24+t*2*(185-24));b=Math.round(39+t*2*(129-39));}
+        else{const u=(t-0.5)*2;r=Math.round(16+u*(239-16));g=Math.round(185-u*(185-68));b=Math.round(129-u*129);}
+        cell.style.background=`rgb(${r},${g},${b})`;
+        cell.style.color=t>0.45?"rgba(0,0,0,0.75)":"rgba(255,255,255,0.6)";
+        cell.title=`${day} ${h}:00 — avg ${Math.round(avg)} people`;
+        cell.textContent=Math.round(avg);
+      } else { cell.style.background="#161b25"; }
     });
   });
 }
 
-// ── Stats ──────────────────────────────────────────────────────────────────
 function updateStats(data) {
-  const today     = new Date().toLocaleDateString("en-US", { weekday:"long" });
-  const todayStr  = new Date().toISOString().slice(0, 10);
-  const todayData = data.filter(d => d.timestamp && d.timestamp.startsWith(todayStr));
-  const latest    = data[data.length - 1];
+  const todayStr=new Date().toISOString().slice(0,10);
+  const todayData=data.filter(d=>d.timestamp?.startsWith(todayStr));
+  const latest=data[data.length-1];
+  const days=new Set(data.map(d=>d.timestamp?.slice(0,10))).size;
 
-  if (latest) {
-    document.getElementById("stat-current").textContent = latest.count;
-    const pct = Math.round(latest.count / MAX_CAP * 100);
-    const el  = document.getElementById("stat-pct");
-    el.textContent = pct + "%";
-    el.className   = "stat-value " + (pct < 40 ? "green" : pct < 70 ? "blue" : pct < 90 ? "yellow" : "red");
+  if(latest){
+    document.getElementById("stat-current").textContent=latest.count;
+    const pct=Math.round(latest.count/MAX_CAP*100);
+    const el=document.getElementById("stat-pct");
+    el.textContent=pct+"%";
+    el.className="stat-value "+(pct<40?"green":pct<70?"blue":pct<90?"yellow":"red");
+    document.getElementById("stat-pct-label").textContent=["Low","Moderate","Busy","Very Busy"][pct<40?0:pct<70?1:pct<90?2:3];
   }
-  document.getElementById("stat-peak").textContent  = todayData.length ? Math.max(...todayData.map(d => d.count)) : "—";
-  document.getElementById("stat-total").textContent = data.length;
+  if(todayData.length){
+    const peak=Math.max(...todayData.map(d=>d.count));
+    const peakRow=todayData.find(d=>d.count===peak);
+    document.getElementById("stat-peak").textContent=peak;
+    document.getElementById("stat-peak-time").textContent=peakRow?hourLabel(peakRow.hour):"—";
+  }
+  document.getElementById("stat-total").textContent=data.length;
+  document.getElementById("stat-days").textContent=`across ${days} day${days!==1?"s":""}`;
 }
 
-// ── Load & render ──────────────────────────────────────────────────────────
-async function loadData() {
-  try {
-    const res = await fetch(CSV_URL + "?t=" + Date.now());
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    allData = parseCSV(text);
-
-    if (allData.length === 0) {
-      document.getElementById("error-msg").style.display = "block";
-      document.getElementById("error-msg").textContent   =
-        "No data yet — the logger will start collecting readings automatically during gym hours.";
-      return;
-    }
-
-    initChart(allData);
-    buildHeatmap(allData);
-    updateStats(allData);
-
-    const last = allData[allData.length - 1];
-    document.getElementById("footer").textContent =
-      `Last reading: ${last.timestamp}  ·  ${allData.length} total readings  ·  Data logged every 15 min during gym hours`;
-
-  } catch (e) {
-    document.getElementById("error-msg").style.display = "block";
-    document.getElementById("error-msg").textContent   = `Could not load data: ${e.message}`;
-  }
-}
-
-document.querySelectorAll(".day-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    activeDay = btn.dataset.day;
-    initChart(allData);
+document.querySelectorAll(".day-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".day-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");activeDay=btn.dataset.day;initChart(allData);
   });
 });
 
+async function loadData() {
+  try {
+    const res=await fetch(CSV_URL+"?t="+Date.now());
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    allData=parseCSV(await res.text());
+    const notice=document.getElementById("notice-msg");
+    if(allData.length===0){
+      notice.className="notice info";
+      notice.textContent="No data yet — the logger will start collecting readings automatically during gym hours.";
+      return;
+    }
+    notice.style.display="none";
+    initChart(allData);buildHeatmap(allData);updateStats(allData);
+    const last=allData[allData.length-1];
+    document.getElementById("footer-left").textContent=`Last reading: ${last.timestamp}  ·  ${allData.length} readings total`;
+  } catch(e) {
+    const notice=document.getElementById("notice-msg");
+    notice.className="notice error";
+    notice.textContent=`Could not load data: ${e.message}`;
+  }
+}
+
 loadData();
-// Refresh every 5 minutes in case a new reading was committed
-setInterval(loadData, 5 * 60 * 1000);
+setInterval(loadData,5*60*1000);
 </script>
 </body>
 </html>
