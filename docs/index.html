@@ -47,26 +47,26 @@
   }
   .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
     margin-bottom: 2rem;
   }
   .stat {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.2rem 1.4rem;
+    border-radius: 10px;
+    padding: 1.75rem 2rem;
   }
   .stat-label {
     font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     color: var(--muted);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
   }
   .stat-value {
-    font-size: 2rem;
+    font-size: 2.6rem;
     font-weight: 800;
     letter-spacing: -0.04em;
     line-height: 1;
@@ -280,7 +280,7 @@ function makeDatasets(data) {
       data:  f.map(d => ({ x: d.hour, y: d.count })),
       borderColor:     COLORS[activeDay] || "#00e5a0",
       backgroundColor: (COLORS[activeDay] || "#00e5a0") + "22",
-      fill: true, tension: 0.4, pointRadius: 3,
+      fill: true, tension: 0.4, pointRadius: 4, pointHoverRadius: 6, showLine: true,
     }];
   }
   return DAYS.map(day => ({
@@ -290,7 +290,7 @@ function makeDatasets(data) {
                .sort((a, b) => a.x - b.x),
     borderColor:     COLORS[day],
     backgroundColor: COLORS[day] + "18",
-    fill: false, tension: 0.4, pointRadius: 2,
+    fill: false, tension: 0.4, pointRadius: 3, pointHoverRadius: 5, showLine: true,
   })).filter(ds => ds.data.length > 0);
 }
 
@@ -298,7 +298,7 @@ function initChart(data) {
   const ctx = document.getElementById("lineChart").getContext("2d");
   if (chart) chart.destroy();
   chart = new Chart(ctx, {
-    type: "scatter",
+    type: "line",
     data: { datasets: makeDatasets(data) },
     options: {
       animation: { duration: 300 },
