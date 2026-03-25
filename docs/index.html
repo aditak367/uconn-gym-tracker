@@ -181,7 +181,7 @@
 
   <div class="card">
     <div class="card-header">
-      <span class="card-title">Occupancy Over Time</span>
+      <span class="card-title">Average Occupancy by Time of Day</span>
       <div class="day-filters">
         <button class="day-btn active" data-day="All">All</button>
         <button class="day-btn" data-day="Monday">Mon</button>
@@ -245,17 +245,37 @@ function hourLabel(h) {
   return `${d}:${mm.toString().padStart(2,"0")} ${ap}`;
 }
 
+// Average all readings into 15-min buckets per day
+function avgByDay(data, day) {
+  const buckets = {};
+  data.filter(d => d.day === day).forEach(d => {
+    const bucket = Math.round(d.hour * 4) / 4;
+    if (!buckets[bucket]) buckets[bucket] = [];
+    buckets[bucket].push(d.count);
+  });
+  return Object.entries(buckets)
+    .map(([h, vals]) => ({ x: parseFloat(h), y: Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) }))
+    .sort((a,b) => a.x - b.x);
+}
+
 function makeDatasets(data) {
-  if (activeDay !== "All") {
-    const f=data.filter(d=>d.day===activeDay), color=COLORS[activeDay]||"#3b82f6";
-    return [{label:activeDay,data:f.map(d=>({x:d.hour,y:d.count})),borderColor:color,backgroundColor:color+"18",fill:true,tension:0.4,pointRadius:3,pointHoverRadius:5,borderWidth:2,showLine:true}];
-  }
-  return DAYS.map(day=>({
-    label:day,
-    data:data.filter(d=>d.day===day).map(d=>({x:d.hour,y:d.count})).sort((a,b)=>a.x-b.x),
-    borderColor:COLORS[day],backgroundColor:COLORS[day]+"10",
-    fill:false,tension:0.4,pointRadius:2,pointHoverRadius:4,borderWidth:2,showLine:true,
-  })).filter(ds=>ds.data.length>0);
+  const days = activeDay === "All" ? DAYS : [activeDay];
+  return days.map(day => {
+    const pts   = avgByDay(data, day);
+    const color = COLORS[day] || "#3b82f6";
+    return {
+      label: day,
+      data:  pts,
+      borderColor:      color,
+      backgroundColor:  color + (activeDay !== "All" ? "18" : "10"),
+      fill:             activeDay !== "All",
+      tension:          0.4,
+      pointRadius:      pts.length < 30 ? 3 : 2,
+      pointHoverRadius: 5,
+      borderWidth:      2,
+      showLine:         true,
+    };
+  }).filter(ds => ds.data.length > 0);
 }
 
 function initChart(data) {
@@ -272,7 +292,7 @@ function initChart(data) {
         tooltip:{
           backgroundColor:"#1c2232",borderColor:"#2a3350",borderWidth:1,
           titleColor:"#94a3b8",bodyColor:"#f0f4ff",padding:10,
-          callbacks:{title:i=>hourLabel(i[0].parsed.x),label:c=>`  ${c.dataset.label}: ${c.parsed.y} people`}
+          callbacks:{title:i=>hourLabel(i[0].parsed.x),label:c=>`  ${c.dataset.label}: avg ${c.parsed.y} people`}
         }
       },
       scales:{
