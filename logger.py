@@ -41,9 +41,9 @@ def is_within_hours() -> bool:
     hour    = now.hour + now.minute / 60.0
 
     if weekday < 5:                  # Monday–Friday
-        return 5.0 <= hour < 22.0   # 5:00 AM – 10:00 PM
+        return 5.50 <= hour < 22.5   # 6:00 AM – 10:00 PM
     else:                            # Saturday–Sunday
-        return 10.0 <= hour < 17.0  # 10:00 AM – 5:00 PM
+        return 9.50 <= hour < 17.5  # 10:00 AM – 5:00 PM
 
 # ── WebSocket fetch ───────────────────────────────────────────────────────────
 def get_sid():
